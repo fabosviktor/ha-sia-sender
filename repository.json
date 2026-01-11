@@ -1,0 +1,8 @@
+{
+  "name": "SIA Sender Add-on Repo",
+  "url": "https://github.com/fabosviktor/ha-sia-sender",
+  "maintainer": "fabosviktor",
+  "addons": [
+    "sia_sender"
+  ]
+}
