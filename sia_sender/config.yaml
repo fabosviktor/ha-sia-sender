@@ -1,0 +1,22 @@
+name: "SIA Sender"
+version: "1.0.0"
+slug: "sia_sender"
+description: "SIA DC-09 event sender for Alarmo/Home Assistant"
+arch:
+  - amd64
+  - aarch64
+startup: services
+boot: auto
+ports:
+  8127/tcp: 8127
+options:
+  account: "1234"
+  key: "ABCDEF0123456789ABCDEF0123456789"
+  host: "192.168.1.100"
+  port: 5000
+schema:
+  account: str
+  key: str
+  host: str
+  port: int
+build: {}
