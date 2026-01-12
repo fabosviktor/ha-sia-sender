@@ -13,10 +13,15 @@ def load_options():
 opts = load_options()
 
 SIA_ACCOUNT = opts.get("account")
-SIA_KEY = opts.get("key") or ""   # 🔧 üres kulcs, ha nem kell
+SIA_KEY = opts.get("key") or ""   # üres kulcs is jó
 SIA_HOST = opts.get("host")
 SIA_PORT = int(opts.get("port"))
 
 accounts = [SIAAccount(SIA_ACCOUNT, SIA_KEY)]
 
-client = SIAClient(SIA_HOST, SIA_PORT, accounts)
+# 🔥 Kötelező callback a könyvtár új verziója miatt
+def dummy_callback(event):
+    return True
+
+# 🔥 Kötelező 4 paraméter: host, port, accounts, function
+client = SIAClient(SIA_HOST, SIA_PORT, accounts, dummy_callback)
