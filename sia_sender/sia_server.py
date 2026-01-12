@@ -1,6 +1,6 @@
 import json
+import socket
 from flask import Flask, request
-from pysiaalarm import SIAClient, SIAAccount
 
 app = Flask(__name__)
 
@@ -12,16 +12,37 @@ def load_options():
 
 opts = load_options()
 
-SIA_ACCOUNT = opts.get("account")
-SIA_KEY = opts.get("key") or ""   # üres kulcs is jó
-SIA_HOST = opts.get("host")
-SIA_PORT = int(opts.get("port"))
+ACCOUNT = opts.get("account")
+HOST = opts.get("host")
+PORT = int(opts.get("port"))
 
-accounts = [SIAAccount(SIA_ACCOUNT, SIA_KEY)]
+def send_sia_event(event_code, zone="01"):
+    # SIA DC-09 üzenet formátum
+    message = f'"{ACCOUNT}"L0#"{event_code}{zone}"\r\n'
 
-# 🔥 Kötelező callback a könyvtár új verziója miatt
-def dummy_callback(event):
-    return True
+    # TCP küldés
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(message.encode("ascii"))
 
-# 🔥 Kötelező 4 paraméter: host, port, accounts, function
-client = SIAClient(SIA_HOST, SIA_PORT, accounts, dummy_callback)
+@app.route("/send", methods=["POST"])
+def send():
+    data = request.json or {}
+    event = data.get("event", "BA")
+    zone = data.get("zone", "01")
+
+    mapping = {
+        "ALARM": "BA",
+        "DISARM": "CL",
+        "ARM": "OP",
+        "TAMPER": "TA",
+    }
+
+    sia_code = mapping.get(event, "BA")
+
+    send_sia_event(sia_code, zone)
+
+    return {"status": "sent", "event": sia_code, "zone": zone}
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8127)
