@@ -17,10 +17,9 @@ HOST = opts.get("host")
 PORT = int(opts.get("port"))
 
 def send_sia_event(event_code, zone="01"):
-    # SIA DC-09 üzenet formátum
-    message = f'"{ACCOUNT}"L0#"{event_code}{zone}"\r\n'
+    # Enigma-kompatibilis SIA DC-09 üzenet
+    message = f'SIA-DCS"{ACCOUNT}"0000L0#{event_code}{zone}\r\n'
 
-    # TCP küldés
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         s.sendall(message.encode("ascii"))
@@ -28,7 +27,7 @@ def send_sia_event(event_code, zone="01"):
 @app.route("/send", methods=["POST"])
 def send():
     data = request.json or {}
-    event = data.get("event", "BA")
+    event = data.get("event", "ALARM")
     zone = data.get("zone", "01")
 
     mapping = {
