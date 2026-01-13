@@ -17,12 +17,18 @@ HOST = opts.get("host")
 PORT = int(opts.get("port"))
 
 def send_sia_event(event_code, zone="01"):
-    # Enigma-kompatibilis SIA DC-09 üzenet
-    message = f'SIA-DCS"{ACCOUNT}"0000L0#{event_code}{zone}\r\n'
+    # SIA DC-09 üzenet
+    sia_message = f'SIA-DCS"{ACCOUNT}"0000L0#{event_code}{zone}'
+
+    # SIA-IP hossz mező (karakterszám)
+    length = len(sia_message)
+
+    # SIA-IP teljes üzenet
+    full_message = f'{length} {sia_message}\r\n'
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
-        s.sendall(message.encode("ascii"))
+        s.sendall(full_message.encode("ascii"))
 
 @app.route("/send", methods=["POST"])
 def send():
