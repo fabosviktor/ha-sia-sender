@@ -16,9 +16,9 @@ ACCOUNT = opts.get("account")
 HOST = opts.get("host")
 PORT = int(opts.get("port"))
 
-# -----------------------------
-# CRC16-X25 (Enigma II által használt)
-# -----------------------------
+# ----------------------------------------------------
+# CRC16-X25 (Enigma II által használt CRC)
+# ----------------------------------------------------
 def crc16_x25(data: bytes) -> int:
     crc = 0xFFFF
     for b in data:
@@ -31,9 +31,9 @@ def crc16_x25(data: bytes) -> int:
     crc = ~crc & 0xFFFF
     return crc
 
-# -----------------------------
+# ----------------------------------------------------
 # SIA-IP DC-09 üzenet küldése
-# -----------------------------
+# ----------------------------------------------------
 def send_sia_event(event_code, zone="01"):
     # SIA DC-09 payload
     payload = f'SIA-DCS"{ACCOUNT}"0000L0#{event_code}{zone}'
@@ -42,21 +42,25 @@ def send_sia_event(event_code, zone="01"):
     crc_value = crc16_x25(payload.encode("ascii"))
     crc_hex = f"{crc_value:04X}"
 
-    # Teljes SIA-IP üzenet (hossz + payload + CRC)
+    # Teljes SIA-IP üzenet
     full_message = f'{len(payload)} {payload}[{crc_hex}]\r\n'
 
     print("Küldendő üzenet:", full_message)
+    print("Kapcsolódás próbálkozás:", HOST, PORT)
 
     # TCP küldés
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.connect((HOST, PORT))
-            print("Kapcsolódás sikeres:", HOST, PORT)
+            print("Kapcsolódás sikeres")
             s.sendall(full_message.encode("ascii"))
             print("Üzenet elküldve")
         except Exception as e:
-            print("Hiba küldés közben:", e)
+            print("Hiba a TCP kapcsolat során:", e)
 
+# ----------------------------------------------------
+# REST API endpoint
+# ----------------------------------------------------
 @app.route("/send", methods=["POST"])
 def send():
     data = request.json or {}
@@ -76,5 +80,8 @@ def send():
 
     return {"status": "sent", "event": sia_code, "zone": zone}
 
+# ----------------------------------------------------
+# Flask indítása
+# ----------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8127)
